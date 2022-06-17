@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 
 detector = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
 
@@ -35,4 +36,8 @@ def gather_dataset():
   cap.release()
   cv2.destroyAllWindows()
 
-gather_dataset()
+if __name__ == "__main__":
+  if os.path.isdir("dataset") == False:
+    os.makedirs("dataset")
+    
+  gather_dataset()
