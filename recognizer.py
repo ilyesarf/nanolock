@@ -3,6 +3,7 @@ from PIL import Image
 import cv2
 import os
 import shutil
+import json
 
 class Recognizer():
 
@@ -10,30 +11,55 @@ class Recognizer():
     self.detector = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
     self.recognizer = cv2.face.LBPHFaceRecognizer_create()
 
-    self.cap = cv2.VideoCapture(0)
+    if os.path.isfile("names.json") == False:
+      self.names = {"names": ["Unknown  "]}
+    
+      self.name = input("What's your name? ")
 
-    self.cap.set(3,640) # set Width
-    self.cap.set(4,480) # set Height
-  
+      self.names["names"].append(self.name)
+
+      json.dump(self.names, open("names.json", "w"))
+
+    else:
+      self.names = json.load(open("names.json", "r"))
+
+      self.name = input("What's your name? ")
+
+      if self.name not in self.names["names"]:
+        self.names["names"].append(self.name)
+        json.dump(self.names, open("names.json", "w"))
+          
     if os.path.isdir("dataset") == False:
       os.makedirs("dataset")
       self.gather_dataset()
     elif len([name for name in os.listdir("dataset") if os.path.isfile(os.path.join("dataset", name))]) < 30:
       shutil.rmtree("dataset")
       os.makedirs("dataset")
-      self.gather_dataset()
+      self.gather_dataset() 
+    elif ("img.%s" % self.names["names"].index(self.name)) not in os.listdir("dataset"):
+      self.gather_dataset() 
 
     if os.path.isdir("model") == False:
       os.makedirs("model")
       self.train()
-    elif len(os.listdir("dataset/")) == 0:
+    elif len(os.listdir("model/")) == 0:
+      self.train()
+    elif len(os.listdir("dataset")) > 30 and len(os.listdir("dataset"))%30 == 0: #check if new faces are added to the dataset
+      shutil.rmtree("model")
+      os.makedirs("model")
       self.train()
 
 
   def gather_dataset(self):
+
+    cap = cv2.VideoCapture(0)
+
+    cap.set(3,640) # set Width
+    cap.set(4,480) # set Height
+    
     count = 0
     while count != 30:
-        ret, frame = self.cap.read()
+        ret, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.detector.detectMultiScale(
@@ -46,7 +72,7 @@ class Recognizer():
           cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
           count += 1
 
-          cv2.imwrite(f"dataset/img.1.{count}.jpg", gray[y:y+h,x:x+w]) #1 is for the user id
+          cv2.imwrite("dataset/img.%s.%s.jpg" % (self.names["names"].index(self.name), count), gray[y:y+h,x:x+w]) 
         
           cv2.imshow('video', frame)
         
@@ -54,7 +80,7 @@ class Recognizer():
         if k == 27: # press 'ESC' to quit
             break
 
-    self.cap.release()
+    cap.release()
     cv2.destroyAllWindows()
   
   def label_img(self):
@@ -86,19 +112,22 @@ class Recognizer():
 
   def recognize(self):
     font = cv2.FONT_HERSHEY_SIMPLEX
+
+    cap = cv2.VideoCapture(0)
+
+    cap.set(3,640) # set Width
+    cap.set(4,480) # set Height
     
     #init id
     id = 0
 
-    names = ["Unknown", "Quimzy"]
-
-    minW = 0.1*self.cap.get(3)
-    minH = 0.1*self.cap.get(4)
+    minW = 0.1*cap.get(3)
+    minH = 0.1*cap.get(4)
 
     while True:
         self.recognizer.read("model/model.yml") #load model
 
-        ret, frame = self.cap.read()
+        ret, frame = cap.read()
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
         
         faces = self.detector.detectMultiScale( 
@@ -113,7 +142,7 @@ class Recognizer():
           id, confidence = self.recognizer.predict(gray[y:y+h,x:x+w])
 
           if (confidence < 100):
-            id = names[id]
+            id = self.names["names"][id]
             confidence = "  {0}%".format(round(100 - confidence))
           else:
             id = "unknown"
@@ -144,12 +173,12 @@ class Recognizer():
         if k == 27:
             break
 
-      
+    cap.release()
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
   recognizer = Recognizer()
   recognizer.recognize()
-  recognizer.cap.release()
-  cv2.destroyAllWindows()
+  
   
   

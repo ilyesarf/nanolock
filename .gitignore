@@ -1,4 +1,6 @@
 dataset/
-.*.swp
 tmp/
 model/
+names.json
+.*.swp
+
