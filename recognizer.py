@@ -90,7 +90,7 @@ class Recognizer():
     #init id
     id = 0
 
-    names = ["Unknown", "Ilyes"]
+    names = ["Unknown", "Quimzy"]
 
     minW = 0.1*self.cap.get(3)
     minH = 0.1*self.cap.get(4)
