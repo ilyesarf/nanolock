@@ -32,12 +32,12 @@ class Recognizer():
     if os.path.isdir("dataset") == False:
       os.makedirs("dataset")
       self.gather_dataset()
-    elif len([name for name in os.listdir("dataset") if os.path.isfile(os.path.join("dataset", name))]) < 30:
+    elif len(os.listdir("dataset"))%30 != 0:
       shutil.rmtree("dataset")
       os.makedirs("dataset")
       self.gather_dataset() 
-    elif ("img.%s" % self.names["names"].index(self.name)) not in os.listdir("dataset"):
-      self.gather_dataset() 
+    elif self.names["names"].index(self.name) in [imgpath.split(".")[1] for imgpath in os.listdir("dataset")] == False: #check if there's already data for name
+      self.gather_dataset()
 
     if os.path.isdir("model") == False:
       os.makedirs("model")
