@@ -10,7 +10,6 @@ class Recognizer():
     self.detector = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
     self.recognizer = cv2.face.LBPHFaceRecognizer_create()
 
-    
     self.cap = cv2.VideoCapture(0)
 
     self.cap.set(3,640) # set Width
@@ -85,11 +84,72 @@ class Recognizer():
     self.recognizer.train(faces, np.array(ids))
     self.recognizer.write('model/model.yml') #save model
 
-  def recognizer(self):
-    pass
+  def recognize(self):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    
+    #init id
+    id = 0
+
+    names = ["Unknown", "Ilyes"]
+
+    minW = 0.1*self.cap.get(3)
+    minH = 0.1*self.cap.get(4)
+
+    while True:
+        self.recognizer.read("model/model.yml") #load model
+
+        ret, frame = self.cap.read()
+        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        
+        faces = self.detector.detectMultiScale( 
+          gray,
+          scaleFactor = 1.2,
+          minNeighbors = 5,
+          minSize = (int(minW), int(minH)),
+        )
+        
+        for(x,y,w,h) in faces:
+          cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
+          id, confidence = self.recognizer.predict(gray[y:y+h,x:x+w])
+
+          if (confidence < 100):
+            id = names[id]
+            confidence = "  {0}%".format(round(100 - confidence))
+          else:
+            id = "unknown"
+            confidence = "  {0}%".format(round(100 - confidence))
+        
+          cv2.putText(
+            frame, 
+            f"Hey {str(id)}", 
+            (x+5,y-5), 
+            font, 
+            1, 
+            (255,255,255), 
+            2
+          )
+
+          cv2.putText(
+            frame, 
+            str(confidence), 
+            (x+5,y+h-5), 
+            font, 
+            1, 
+            (255,255,0), 
+            1
+          ) 
+        
+        cv2.imshow('camera',frame) 
+        k = cv2.waitKey(10) & 0xff # Press 'ESC' for exiting video
+        if k == 27:
+            break
+
       
 
 if __name__ == "__main__":
   recognizer = Recognizer()
+  recognizer.recognize()
+  recognizer.cap.release()
+  cv2.destroyAllWindows()
   
   
