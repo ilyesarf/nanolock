@@ -12,7 +12,7 @@ class Recognizer():
     self.recognizer = cv2.face.LBPHFaceRecognizer_create()
 
     if os.path.isfile("names.json") == False:
-      self.names = {"names": ["Unknown  "]}
+      self.names = {"names": ["Unknown"]}
     
       self.name = input("What's your name? ")
 
@@ -36,7 +36,7 @@ class Recognizer():
       shutil.rmtree("dataset")
       os.makedirs("dataset")
       self.gather_dataset() 
-    elif self.names["names"].index(self.name) in [imgpath.split(".")[1] for imgpath in os.listdir("dataset")] == False: #check if there's already data for name
+    elif (self.names["names"].index(self.name) in set([imgpath.split(".")[1] for imgpath in os.listdir("dataset")])) == False: #check if there's already data for name
       self.gather_dataset()
 
     if os.path.isdir("model") == False:
