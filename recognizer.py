@@ -90,12 +90,15 @@ class Recognizer():
     #init id
     id = 0
 
-    names = ["Unknown", "Quimzy"]
+    names = ["Unknown", os.getlogin()]
 
     minW = 0.1*self.cap.get(3)
     minH = 0.1*self.cap.get(4)
 
-    while True:
+    confidence = 0
+    accept_login = False
+
+    for chance in range(3):
         self.recognizer.read("model/model.yml") #load model
 
         ret, frame = self.cap.read()
@@ -112,44 +115,15 @@ class Recognizer():
           cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
           id, confidence = self.recognizer.predict(gray[y:y+h,x:x+w])
 
-          if (confidence < 100):
-            id = names[id]
-            confidence = "  {0}%".format(round(100 - confidence))
-          else:
-            id = "unknown"
-            confidence = "  {0}%".format(round(100 - confidence))
-        
-          cv2.putText(
-            frame, 
-            f"Hey {str(id)}", 
-            (x+5,y-5), 
-            font, 
-            1, 
-            (255,255,255), 
-            2
-          )
-
-          cv2.putText(
-            frame, 
-            str(confidence), 
-            (x+5,y+h-5), 
-            font, 
-            1, 
-            (255,255,0), 
-            1
-          ) 
-        
-        cv2.imshow('camera',frame) 
-        k = cv2.waitKey(10) & 0xff # Press 'ESC' for exiting video
-        if k == 27:
+          if confidence >= 51:
+            accept_login = True
             break
+          else:
+            continue
 
-      
+    self.cap.release()
+    return accept_login
 
-if __name__ == "__main__":
-  recognizer = Recognizer()
-  recognizer.recognize()
-  recognizer.cap.release()
-  cv2.destroyAllWindows()
+  
   
   
