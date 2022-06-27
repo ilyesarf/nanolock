@@ -36,7 +36,7 @@ class Recognizer():
       shutil.rmtree("dataset")
       os.makedirs("dataset")
       self.gather_dataset() 
-    elif (self.names["names"].index(self.name) in set([imgpath.split(".")[1] for imgpath in os.listdir("dataset")])) == False: #check if there's already data for name
+    elif (self.names["names"].index(self.name) not in set([imgpath.split(".")[1] for imgpath in os.listdir("dataset")])) == False: #check if there's already data for name
       self.gather_dataset()
 
     if os.path.isdir("model") == False:
