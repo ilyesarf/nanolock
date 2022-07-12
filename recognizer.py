@@ -98,32 +98,35 @@ class Recognizer():
     confidence = 0
     accept_login = False
 
-    for chance in range(3):
-        self.recognizer.read("model/model.yml") #load model
+    chance = 0
 
-        ret, frame = self.cap.read()
-        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-        
-        faces = self.detector.detectMultiScale( 
-          gray,
-          scaleFactor = 1.2,
-          minNeighbors = 5,
-          minSize = (int(minW), int(minH)),
-        )
-        
-        for(x,y,w,h) in faces:
-          cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
-          id, confidence = self.recognizer.predict(gray[y:y+h,x:x+w])
+    while chance != 5 and accept_login == False:
+      self.recognizer.read("model/model.yml") #load model
 
-          if confidence >= 51:
-            accept_login = True
-            break
-          else:
-            continue
+      ret, frame = self.cap.read()
+      gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+      
+      faces = self.detector.detectMultiScale( 
+        gray,
+        scaleFactor = 1.2,
+        minNeighbors = 5,
+        minSize = (int(minW), int(minH)),
+      )
+      
+      for(x,y,w,h) in faces:
+        cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
+        id, confidence = self.recognizer.predict(gray[y:y+h,x:x+w])
+
+        if round(100-confidence) >= 51:
+          accept_login = True
+        else:
+          chance += 1
 
     self.cap.release()
     return accept_login
 
+recognizer = Recognizer()
+print(recognizer.recognize())
   
   
   
