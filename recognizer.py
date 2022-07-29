@@ -3,10 +3,16 @@ from PIL import Image
 import cv2
 import os
 import shutil
+import sys
 
 class Recognizer():
 
   def __init__(self):
+    if os.path.isdir("cascades") == False:
+      print("cascades folder is not found")
+      print("Leaving...")
+      sys.exit()
+
     self.detector = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
     self.recognizer = cv2.face.LBPHFaceRecognizer_create()
 
@@ -101,6 +107,7 @@ class Recognizer():
     chance = 0
 
     while chance != 5 and accept_login == False:
+
       self.recognizer.read("model/model.yml") #load model
 
       ret, frame = self.cap.read()
