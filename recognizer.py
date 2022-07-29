@@ -20,15 +20,25 @@ class Recognizer():
 
     self.cap.set(3,640) # set Width
     self.cap.set(4,480) # set Height
-  
+
+    if os.getenv("RESET_RECOG", None):
+      if os.path.isdir("dataset") == True and os.path.isdir("model") == True:
+        shutil.rmtree("dataset")
+        shutil.rmtree("model")
+
+    self.setup()
+      
+  def setup(self):
+    #dataset checks
     if os.path.isdir("dataset") == False:
       os.makedirs("dataset")
       self.gather_dataset()
-    elif len([name for name in os.listdir("dataset") if os.path.isfile(os.path.join("dataset", name))]) < 30:
+    elif len([name for name in os.listdir("dataset") if os.path.isfile(os.path.join("dataset", name))]) < 60:
       shutil.rmtree("dataset")
       os.makedirs("dataset")
       self.gather_dataset()
 
+    #model checks
     if os.path.isdir("model") == False:
       os.makedirs("model")
       self.train()
@@ -38,7 +48,7 @@ class Recognizer():
 
   def gather_dataset(self):
     count = 0
-    while count != 30:
+    while count != 60:
         ret, frame = self.cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -56,7 +66,7 @@ class Recognizer():
         
           cv2.imshow('video', frame)
         
-        k = cv2.waitKey(30) & 0xff
+        k = cv2.waitKey(60) & 0xff
         if k == 27: # press 'ESC' to quit
             break
 
@@ -134,6 +144,7 @@ class Recognizer():
 
 recognizer = Recognizer()
 print(recognizer.recognize())
+
   
   
   
