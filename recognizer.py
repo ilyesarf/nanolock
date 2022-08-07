@@ -145,6 +145,8 @@ class Recognizer():
 recognizer = Recognizer()
 print(recognizer.recognize())
 
+#TODO: Train a better model with PyTorch
+
   
   
   
