@@ -1,6 +1,7 @@
 dataset/
 tmp/
 model/
+__pycache__/
 names.json
 .*.swp
-
+__init__.py
