@@ -1,121 +1,56 @@
-from genericpath import isdir
-import numpy as np
+from matplotlib import pyplot
 from PIL import Image
+from numpy import asarray
+from scipy.spatial.distance import cosine
+from mtcnn.mtcnn import MTCNN
+from keras_vggface.vggface import VGGFace
+from keras_vggface.utils import preprocess_input
 import cv2
-import os
-import shutil
-import sys
-
-import tensorflow.keras as keras
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.mobilenet import preprocess_input
-
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
-from tensorflow.keras.models import Model
-
-from tensorflow.keras.optimizers import Adam
-
 
 class Recognizer():
 
   def __init__(self):
-    if os.path.isdir("cascades") == False:
-      print("cascades folder is not found")
-      print("Leaving...")
-      sys.exit()
+    pass
     
-    if os.path.isdir("nanolock/dataset/") == False:
-      os.makedirs("nanolock/dataset/")
+  #gather dataset (multiple images is optional)
+  
+  def extract_face(self, img, required_size=(224, 224)):
+    pixels = pyplot.imread(img)
 
-    if os.getenv("SET_USER", None):
-      self.username = input("Set username: ")
-    else:
-      self.username = os.getlogin()
+    #detect face
+    detector = MTCNN()
+    results = detector.detect_faces(pixels)
 
-    self.users = {"Unknown": 0}
-    self.size = (244,244)
+    #resize&prepare face
+    x1, y1, width, height = results[0]['box']
+    x2, y2 = x1 + width, y1 + height
+    face = pixels[y1:y2, x1:x2]
+    image = Image.fromarray(face)
+    image = image.resize(required_size)
+    face_array = asarray(image)
 
-    self.detector = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
-    self.recognizer = cv2.face.LBPHFaceRecognizer_create()
+    return face_array
 
-    self.cap = cv2.VideoCapture(0)
+  def get_embeddings(self, imgs):
+    faces = [self.extract_face(img) for img in imgs]
 
-    self.cap.set(3,640) # set Width
-    self.cap.set(4,480) # set Height
+    samples = asarray(faces, 'float32')
+    samples = preprocess_input(samples, version=2)
 
-    if os.getenv("RESET_RECOG", None):
-      if os.path.isdir("dataset") == True: #and os.path.isdir("model") == True:
-        shutil.rmtree("dataset")
-        #shutil.rmtree("model")
+    model = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3), pooling='avg')
+    yhat = model.predict(samples)
 
-    self.setup()
-      
-  def setup(self):
-    self.dataset_path = f"dataset/{self.username}"
+    return yhat
 
-    #dataset checks
-    if os.path.isdir(self.dataset_path) == False:
-      os.makedirs(self.dataset_path)
-      self.gather_dataset()
-
-    elif len([name for name in os.listdir(self.dataset_path) if os.path.isfile(os.path.join(self.dataset_path, name))]) < 60:
-      shutil.rmtree(self.dataset_path)
-      os.makedirs(self.dataset_path)
-      self.gather_dataset()
-
-    self.augment_dataset()
-
-  def gather_dataset(self):
-    count = 0
-    while count != 60:
-        _, frame = self.cap.read()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        faces = self.detector.detectMultiScale(
-          gray,
-          scaleFactor = 1.3,
-          minNeighbors=5,
-          )
-
-        for (x,y,w,h) in faces:
-          cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-          count += 1
-
-          cv2.imwrite(f"dataset/{self.username}/{count}.jpg", gray[y:y+h,x:x+w])
-        
-          cv2.imshow('video', frame)
-        
-        k = cv2.waitKey(60) & 0xff
-        if k == 27: # press 'ESC' to quit
-            break
-
-    self.cap.release()
-    cv2.destroyAllWindows()
+  def accept_login(self, known_embedding, candidate_embedding, thresh=0.5):
+    accept_login = False
+    score = cosine(known_embedding, candidate_embedding)
     
-  def augment_dataset(self):
+    if score <= thresh:
+      accept_login = True  
+    
+    return accept_login
 
-    train_datagen = ImageDataGenerator(
-        preprocessing_function=preprocess_input)
-
-    train_generator = train_datagen.flow_from_directory(
-    './dataset',
-    target_size=(224,224),
-    color_mode='rgb',
-    batch_size=32,
-    class_mode='categorical',
-    shuffle=True)
-
-    #print(train_generator.class_indices.values())
-
-    return train_datagen, train_generator
-
-recognizer = Recognizer()
-
-
-
-  
-  
+  def recognizer(self):
+    pass
   
