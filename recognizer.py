@@ -1,6 +1,7 @@
 import cv2
 import os
 import shutil
+import sys
 from matplotlib import pyplot
 from PIL import Image
 from numpy import asarray
@@ -9,7 +10,7 @@ from mtcnn.mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
 
-class Recognizer():
+class Verification():
 
   def __init__(self):
     self.cap = cv2.VideoCapture(0)
@@ -37,36 +38,53 @@ class Recognizer():
     if os.getenv("IMAGE_COUNT", None):
       image_count = os.getenv("IMAGE_COUNT")
     else:
-      image_count = 1
+      image_count = 5
     
     if self.cap.isOpened():
       for i in range(int(image_count)):
         ret, frame = self.cap.read()
         if ret:
-          cv2.imwrite(f"dataset/img_{i}.jpg", frame)
+          self.extract_face(f"dataset/img_{i}.jpg", frame)
     
       self.cap.release()
 
 
-  def extract_face(self, img, required_size=(224, 224)):
-    pixels = pyplot.imread(img)
+  def extract_face(self, img_path, frame=None, required_size=(224, 224)):
+    if frame.any() == None:
+      pixels = pyplot.imread(img_path)
+    else:
+      pixels = frame
 
     #detect face
     detector = MTCNN()
     results = detector.detect_faces(pixels)
 
-    #resize&prepare face
-    x1, y1, width, height = results[0]['box']
-    x2, y2 = x1 + width, y1 + height
-    face = pixels[y1:y2, x1:x2]
-    image = Image.fromarray(face)
+    if len(results) > 0:
+
+      #resize&prepare face
+      x1, y1, width, height = results[0]['box']
+      x2, y2 = x1 + width, y1 + height
+      face = pixels[y1:y2, x1:x2]
+
+      #save cropped face
+      cv2.imwrite(img_path, face)
+
+    else:
+      print("NO FACE WAS DETECTED!")
+      while True:
+        cv2.namedWindow("image")
+        cv2.imshow("image",frame)
+      #lock screen?
+
+  def return_facearray(self, img_path, required_size=(224, 224)):
+    image = cv2.imread(img_path)
+    image = Image.fromarray(image)
     image = image.resize(required_size)
-    face_array = asarray(image)
+    
+    return asarray(image)
 
-    return face_array
-
-  def get_embeddings(self, imgs):
-    faces = [self.extract_face(img) for img in imgs]
+  def get_embeddings(self, img_paths):
+    faces = [self.return_facearray(img_path) for img_path in img_paths]
 
     samples = asarray(faces, 'float32')
     samples = preprocess_input(samples, version=2)
@@ -93,15 +111,15 @@ class Recognizer():
       while chance != 5 and accept_login == False:
         ret, frame = self.cap.read()
         if ret:
-          cv2.imwrite("frame.jpg", frame)
+          self.extract_face("frame.jpg", frame)
         
-        imgs = ["frame.jpg"] + self.dataset
+        img_paths = ["frame.jpg"] + self.dataset
 
-        embeddings = self.get_embeddings(imgs)
-        if len(imgs) == 2:
+        embeddings = self.get_embeddings(img_paths)
+        if len(img_paths) == 2:
           accept_login = self.is_match(embeddings[0], embeddings[1])
-        elif len(imgs) > 2:
-          for i in range(len(imgs[1:])):
+        elif len(img_paths) > 2:
+          for i in range(len(img_paths[1:])):
             accept_login = self.is_match(embeddings[0], embeddings[i])
         
         chance += 1
@@ -112,7 +130,11 @@ class Recognizer():
       self.cap.release()
 
     return accept_login
-  
-r = Recognizer()
 
-print(r.accept_login())
+def alert_user():
+  pass
+
+if __name__ == "__main__":
+  verf = Verification()
+
+  print(verf.accept_login())

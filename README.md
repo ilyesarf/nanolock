@@ -1,8 +1,9 @@
-Not just facial identification, but screen unlocking too!!
+Not just facial verification, but screen locking too!!
 
 ## Requirements
 
 - Python3
+- Tensorflow (Python)
 
 ## Installation
 
@@ -16,4 +17,6 @@ $ python recognizer.py
 
 ## TODO
 
-- [ ] Unlock Screen
+- [X] Facial Verification
+- [ ] Lock screen if user is not detected
+- [ ] Alert user (probably through email)
