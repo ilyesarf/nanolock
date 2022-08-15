@@ -143,12 +143,12 @@ def alert_user():
 if __name__ == "__main__":
   verf = Verification()
   if os.getenv("TIME", None) == False:
-    time = int(os.getenv("TIME")) #mins
+    t = int(os.getenv("TIME")) #mins
   else:
-    time = 5
+    t = 5
   
   while True:
-    time.sleep(time*60)
+    time.sleep(t*60)
     if not verf.accept_login():
       messagebox.showwarning("WARNING", "You are not my user !! Logging out...")
       time.sleep(2)
