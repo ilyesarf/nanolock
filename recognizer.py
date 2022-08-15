@@ -1,7 +1,13 @@
 import cv2
 import os
 import shutil
-import sys
+import time
+
+import tkinter
+root = tkinter.Tk()
+root.withdraw()
+
+from tkinter import messagebox
 from matplotlib import pyplot
 from PIL import Image
 from numpy import asarray
@@ -136,5 +142,15 @@ def alert_user():
 
 if __name__ == "__main__":
   verf = Verification()
-
-  print(verf.accept_login())
+  if os.getenv("TIME", None) == False:
+    time = int(os.getenv("TIME")) #mins
+  else:
+    time = 5
+  
+  while True:
+    time.sleep(time*60)
+    if not verf.accept_login():
+      messagebox.showwarning("WARNING", "You are not my user !! Logging out...")
+      time.sleep(2)
+      os.system("shutdown -l")
+    
