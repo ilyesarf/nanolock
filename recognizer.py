@@ -7,6 +7,7 @@ import tkinter
 root = tkinter.Tk()
 root.withdraw()
 
+import smtplib, ssl
 from tkinter import messagebox
 from matplotlib import pyplot
 from PIL import Image
@@ -137,8 +138,25 @@ class Verification():
 
     return accept_login
 
-def alert_user():
-  pass
+class Alert:
+
+  def alert_no_face(self):
+    pass
+
+  def alert_wrong_face(self):
+    pass
+
+  def send_email(self, mail_addr, passwd, msg): #using email
+    port = 587
+    gmail_server = "smtp.gmail.com"
+    context = ssl.create_default_context()
+    
+    with smtplib.SMTP(gmail_server, port) as server:
+      server.ehlo()
+      server.starttls(context=context)
+      server.ehlo()
+      server.login(mail_addr, passwd)
+      server.sendmail(mail_addr, mail_addr, msg)
 
 if __name__ == "__main__":
   verf = Verification()
