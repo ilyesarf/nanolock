@@ -2,3 +2,4 @@ dataset/
 .*.swp
 tmp/
 model/
+__pycache__/
