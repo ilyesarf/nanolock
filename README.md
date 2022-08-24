@@ -18,5 +18,5 @@ $ python recognizer.py
 ## TODO
 
 - [X] Facial Verification
-- [ ] Lock screen if user is not detected
-- [ ] Alert user (probably through email)
+- [X] Lock screen if user is not detected
+- [X] Alert user (probably through email)
