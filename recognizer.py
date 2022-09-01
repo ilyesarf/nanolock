@@ -1,13 +1,14 @@
-import multiprocessing
 import os
 import cv2
 import sys
+import json
+import time
 import shutil
 import random
-import time
 import signal
-import json
+import subprocess as sp, shlex
 import webbrowser
+import multiprocessing
 from flask import Flask, request, render_template
 from multiprocessing import Process
 import smtplib, ssl
@@ -216,7 +217,8 @@ class Alert:
       time.sleep(1)
       messagebox.showwarning("WARNING", "Wrong Code!! Logging out...")
       time.sleep(2)
-      os.system("logout")
+      logout_cmd = "/bin/bash -c logout"
+      sp.run(shlex.split(logout_cmd))
 
   #Warning Emails
   def send_email(self, msg): #only works with gmail
@@ -277,7 +279,8 @@ class Alert:
 
     messagebox.showwarning("WARNING", "You are not my user !! Logging out...")
     time.sleep(2)
-    os.system("logout")
+    logout_cmd = "/bin/bash -c logout"
+    sp.run(shlex.split(logout_cmd))
 
 
 if __name__ == "__main__":
