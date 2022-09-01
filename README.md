@@ -20,8 +20,9 @@ $ python recognizer.py
 
 ## Setup Gmail for Alerts
 
-1. <a href="https://support.google.com/accounts/answer/185833?hl=en"> Get App Password </a>
-2.  
+1. <a href="https://support.google.com/accounts/answer/185833?hl=en"> Generate & Copy App Password </a>
+2. Run recognizer.py
+3. Set credentials (put App Password as password)
 
 ## TODO
 
