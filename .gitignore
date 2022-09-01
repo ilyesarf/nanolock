@@ -1,5 +1,6 @@
 dataset/
 .*.swp
+*.json
 tmp/
 model/
 __pycache__/

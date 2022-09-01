@@ -1,9 +1,12 @@
-Not just facial verification, but screen locking too!!
+Smart screen locking with Facial Verification.
+
 
 ## Requirements
 
 - Python3
-- Tensorflow (Python)
+- Tensorflow (Python3)
+- Gmail account
+- BASH (as a default shell)
 
 ## Installation
 
@@ -14,6 +17,11 @@ $ pip3 install requirements.txt
 
 $ python recognizer.py
 ```
+
+## Setup Gmail for Alerts
+
+1. <a href="https://support.google.com/accounts/answer/185833?hl=en"> Get App Password </a>
+2.  
 
 ## TODO
 

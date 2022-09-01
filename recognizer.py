@@ -6,6 +6,7 @@ import shutil
 import random
 import time
 import signal
+import json
 import webbrowser
 from flask import Flask, request, render_template
 from multiprocessing import Process
@@ -25,7 +26,7 @@ from email.mime.multipart import MIMEMultipart
 class NoFaceDetected(Exception):
   pass
 
-class Verification():
+class Verification:
 
   def __init__(self):
 
@@ -159,10 +160,32 @@ class Verification():
 class Alert:
 
   def __init__(self):
-    self.gmail_addr_recv = ""
-    self.gmail_addr_send = ""
-    self.gmail_passwd = ""
     
+    if os.path.exists("creds.json"):
+      self.load_configuration()
+    else:
+      self.setup_configuration()
+  
+  #Configuration
+  def setup_configuration(self):
+    self.gmail_addr_recv = input("Insert Gmail address to receive alerts: ")
+    print()
+    self.gmail_addr_send = input("Insert Gmail address to send alerts: ")
+    print()
+    self.gmail_passwd = input("Insert Gmail adress app password: ")
+
+    creds = {"gmail_addr_recv": self.gmail_addr_recv, "gmail_addr_send": self.gmail_addr_recv, "gmail_passwd": self.gmail_passwd}
+
+    #save creds to json file
+    json.dump(creds, open("creds.json", "w"))
+  
+  def load_configuration(self):
+    #load creds from json file
+    creds = json.load(open("creds.json", "r"))
+
+    self.gmail_addr_recv = creds["gmail_addr_recv"]
+    self.gmail_addr_send = creds["gmail_addr_send"]
+    self.gmail_passwd = creds["gmail_passwd"]
   
   #Pop-ups
   def no_face_code_check(self, code):
@@ -216,8 +239,11 @@ class Alert:
 
     msg_body = f"Code to access: {code}"
     msg.attach(MIMEText(msg_body, "plain"))
-
-    self.send_email(msg.as_string())
+    
+    try:
+      self.send_email(msg.as_string())
+    except Exception:
+      pass
 
     time.sleep(7)
 
@@ -244,7 +270,11 @@ class Alert:
     image = MIMEImage(open("frame.jpg", 'rb').read(), name=os.path.basename("frame.jpg"))
     msg.attach(image)
 
-    self.send_email(msg)
+    try:
+      self.send_email(msg)
+    except Exception:
+      pass
+
     messagebox.showwarning("WARNING", "You are not my user !! Logging out...")
     time.sleep(2)
     os.system("logout")
