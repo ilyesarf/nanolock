@@ -15,7 +15,9 @@ $ git clone https://github.com/Quimzy/nanolock.git
 
 $ pip3 install requirements.txt
 
-$ python recognizer.py
+$ chmod +x setup.sh
+
+$ sudo ./setup.sh
 ```
 
 ## Setup Gmail for Alerts

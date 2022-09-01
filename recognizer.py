@@ -1,4 +1,11 @@
 import os
+
+if os.path.isdir("/etc/nanolock"):
+  os.chdir("/etc/nanolock")
+else:
+  os.makedirs("/etc/nanolock")
+  os.chdir("/etc/nanolock")
+
 import cv2
 import sys
 import json
