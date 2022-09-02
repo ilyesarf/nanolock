@@ -16,9 +16,8 @@ import signal
 import subprocess as sp, shlex
 import webbrowser
 import multiprocessing
-from flask import Flask, request, render_template
-from multiprocessing import Process
 import smtplib, ssl
+from multiprocessing import Process
 from tkinter import messagebox
 from matplotlib import pyplot
 from PIL import Image
@@ -30,6 +29,8 @@ from keras_vggface.utils import preprocess_input
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+from flask import Flask, request, render_template
+
 
 class NoFaceDetected(Exception):
   pass

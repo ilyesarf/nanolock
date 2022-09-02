@@ -1,7 +1,9 @@
-opencv-python
-opencv-contrib-python
 pillow
 numpy
 scipy
 mtcnn
+flask
+tkinter
+opencv-python
+opencv-contrib-python
 keras_vggface
