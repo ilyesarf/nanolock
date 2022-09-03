@@ -15,8 +15,8 @@ import random
 import signal
 import subprocess as sp, shlex
 import webbrowser
-import multiprocessing
 import smtplib, ssl
+from multiprocessing import Value
 from multiprocessing import Process
 from tkinter import messagebox
 from matplotlib import pyplot
@@ -39,7 +39,7 @@ class Verification:
 
   def __init__(self):
 
-    if os.getenv("RESET_RECOG", None):
+    if os.getenv("RESET_VERF", None):
       if os.path.isdir("dataset"):
         shutil.rmtree("dataset")
 
@@ -200,7 +200,7 @@ class Alert:
   def no_face_code_check(self, code):
     app = Flask(__name__)
 
-    success = multiprocessing.Value('i', 0)
+    success = Value('i', 0)
     @app.route('/get_code', methods=["GET", "POST"])
     def get_code():
       if request.method == "POST":
