@@ -1,5 +1,7 @@
 Smart screen locking with Facial Verification.
 
+*You can find multiple users support on<b><a href="https://github.com/Quimzy/nanolock/tree/multiple_users"> this branch</b>*
+
 
 ## Requirements
 
