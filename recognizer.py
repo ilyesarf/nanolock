@@ -1,6 +1,7 @@
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import cv2
-import os
 import shutil
 import json
 from numpy import asarray
