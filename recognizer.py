@@ -1,4 +1,5 @@
 import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 if os.path.isdir("/etc/nanolock"):
   os.chdir("/etc/nanolock")
