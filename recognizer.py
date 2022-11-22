@@ -4,15 +4,15 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import cv2
 import shutil
 import json
-from numpy import asarray
+import numpy as np
 from PIL import Image
 from hashlib import md5
 from keras_vggface.vggface import VGGFace
 from mtcnn.mtcnn import MTCNN
-from matplotlib import pyplot
+#from matplotlib import pyplot
 from keras_vggface.utils import preprocess_input
 from scipy.spatial.distance import cosine
-
+import base64
 
 class NoFaceDetected(Exception):
   pass
@@ -23,98 +23,59 @@ class Verification:
 
     self.model = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3), pooling='avg')
 
-    if os.path.isdir("nanolock/dataset/") == False:
-      os.makedirs("nanolock/dataset/")
+    self.dataset_dir = "nanolock/dataset/"
+    if os.path.isdir(self.dataset_dir) == False:
+      os.makedirs(self.dataset_dir)
 
-  def get_subdirs(self, path): 
-    directories = []
+  def decode_img(self, b64enc_img): #base64 img to np array
+    import io
 
-    for file in os.listdir(path):
-      d = os.path.join(path, file)
-      if os.path.isdir(d):
-        directories.append(d)
+    img_data = base64.b64decode(b64enc_img)
+    img_pil = Image.open(io.BytesIO(img_data))
+    img_arr = np.array(img_pil)
 
-    return directories 
+    return img_arr
 
-  def hash_users(self, users):
-    hashes = [md5(user.encode()).hexdigest() for user in users[1:]]
+  def add_user(self, user_hash, b64enc_img):
+    self.user_hash = user_hash
+    img_path = f"{self.dataset_dir}{self.user_hash}.jpg"
 
-    return hashes
+    img_arr = self.decode_img(b64enc_img)
 
-  def setup(self, username):
-    self.username = username
-    self.dataset_path = f"nanolock/dataset/{md5(self.username.encode()).hexdigest()}"
+    self.extract_face(img_path, img_arr)
 
-    self.sub_datasets = self.get_subdirs("nanolock/dataset") 
-    
-    #add user
-    if os.path.isfile("usernames.json") == False:
-      self.usernames = {"usernames": ["Unknown"]}
+    #add user_hash to db
+    if os.path.isfile("users.json") == False:
+      self.users = {"user_hashes": []}
 
-      self.usernames["usernames"].append(self.username)
+      self.users["user_hashes"].append(self.user_hash)
 
-      json.dump(self.usernames, open("usernames.json", "w"))
+      json.dump(self.users, open("users.json", "w"))
 
     else:
-      self.usernames = json.load(open("usernames.json", "r"))
+      self.users = json.load(open("users.json", "r"))
 
-      if self.username not in self.usernames["usernames"]:
-        self.usernames["usernames"].append(self.username)
-        json.dump(self.usernames, open("usernames.json", "w"))
-
-    #dataset checks 
-    if os.path.isdir(self.dataset_path) == False:
-      os.makedirs(self.dataset_path)
-      self.gather_dataset()
-      
-    elif len(os.listdir(self.dataset_path)) == 0 or len(os.listdir(self.dataset_path))%os.getenv("IMAGE_COUNT") != 0:
-      shutil.rmtree(self.dataset_path)
-      os.makedirs(self.dataset_path)
-      self.gather_dataset() 
-
-    elif self.dataset_path not in self.sub_datasets: #check if there's already data for user
-      self.gather_dataset()
-        
-  def gather_dataset(self):
-    cap = cv2.VideoCapture(0)
-
-    cap.set(3,640) # width
-    cap.set(4,480) # height
-    if os.getenv("IMAGE_COUNT", None):
-      image_count = os.getenv("IMAGE_COUNT")
-    else:
-      image_count = 5
-    
-    if cap.isOpened():
-      for i in range(int(image_count)):
-        ret, frame = cap.read()
-        if ret:
-          self.extract_face(f"nanolock/dataset/{md5(self.username.encode()).hexdigest()}/img.{i}.jpg", frame)
-
-      cap.release()
+      if self.user_hash not in self.users["user_hashes"]:
+        self.users["user_hashes"].append(self.user_hash)
+        json.dump(self.users, open("users.json", "w"))
   
-  def extract_face(self, img_path, frame=None, required_size=(224, 224)):
-    if not frame.any():
-      pixels = pyplot.imread(img_path)
-    else:
-      pixels = frame
+  def extract_face(self, img_path, img_arr):
 
     #detect face
     detector = MTCNN()
-    results = detector.detect_faces(pixels)
+    results = detector.detect_faces(img_arr)
 
     if len(results) > 0:
 
       #resize&prepare face
       x1, y1, width, height = results[0]['box']
       x2, y2 = x1 + width, y1 + height
-      face = pixels[y1:y2, x1:x2]
+      face = img_arr[y1:y2, x1:x2]
 
       #save cropped face
       cv2.imwrite(img_path, face)
 
     else:
-      print("Err")
       raise NoFaceDetected
 
   def return_facearray(self, img_path, required_size=(224, 224)):
@@ -122,19 +83,19 @@ class Verification:
     image = Image.fromarray(image)
     image = image.resize(required_size)
     
-    return asarray(image)
+    return np.asarray(image)
   
   def get_embeddings(self, img_paths):
     faces = [self.return_facearray(img_path) for img_path in img_paths]
 
-    samples = asarray(faces, 'float32')
+    samples = np.asarray(faces, 'float32')
     samples = preprocess_input(samples, version=2)
 
     yhat = self.model.predict(samples)
 
     return yhat
 
-  def is_match(self, known_embedding, candidate_embedding, thresh=0.3):
+  def is_match(self, known_embedding, candidate_embedding, thresh=0.35):
     is_match = False
     score = cosine(known_embedding, candidate_embedding)
     
@@ -143,36 +104,18 @@ class Verification:
     
     return is_match
 
-  def accept_login(self, username): 
-    dataset_path = f"nanolock/dataset/{md5(username.encode()).hexdigest()}"
-
-    cap = cv2.VideoCapture(0)
-
-    cap.set(3,640) # width
-    cap.set(4,480) # height
+  def accept_login(self, user_hash, b64enc_img): 
 
     accept_login = False
-    chance = 0
 
-    while chance <= 5 and accept_login == False:
-        ret, frame = cap.read()
-        if ret:
-          self.extract_face("frame.jpg", frame)
-        
-        img_paths = ["frame.jpg"] + [f"{dataset_path}/{img_path}" for img_path in os.listdir(dataset_path)]
+    img_arr = self.decode_img(b64enc_img)
+    self.extract_face("frame.jpg", img_arr)
+      
+    img_paths = ["frame.jpg", f"{self.dataset_dir}{user_hash}.jpg"]
 
-        embeddings = self.get_embeddings(img_paths)
-        if len(img_paths) == 2:
-          accept_login = self.is_match(embeddings[0], embeddings[1])
-        elif len(img_paths) > 2:
-          for i in range(len(img_paths[1:])):
-            accept_login = self.is_match(embeddings[0], embeddings[i]) 
+    embeddings = self.get_embeddings(img_paths)
+    accept_login = self.is_match(embeddings[0], embeddings[1])
 
-        chance += 1
-          
-        os.remove("frame.jpg")
-
-
-    cap.release()
+    os.remove("frame.jpg")
 
     return accept_login
