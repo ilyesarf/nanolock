@@ -2,17 +2,15 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import cv2
-import shutil
+import base64
 import json
 import numpy as np
 from PIL import Image
 from hashlib import md5
 from keras_vggface.vggface import VGGFace
 from mtcnn.mtcnn import MTCNN
-#from matplotlib import pyplot
 from keras_vggface.utils import preprocess_input
 from scipy.spatial.distance import cosine
-import base64
 
 class NoFaceDetected(Exception):
   pass
@@ -79,6 +77,7 @@ class Verification:
       raise NoFaceDetected
 
   def return_facearray(self, img_path, required_size=(224, 224)):
+    #from image path to np array
     image = cv2.imread(img_path)
     image = Image.fromarray(image)
     image = image.resize(required_size)
@@ -91,11 +90,12 @@ class Verification:
     samples = np.asarray(faces, 'float32')
     samples = preprocess_input(samples, version=2)
 
+    #faces input to embeddings
     yhat = self.model.predict(samples)
 
     return yhat
 
-  def is_match(self, known_embedding, candidate_embedding, thresh=0.35):
+  def is_match(self, known_embedding, candidate_embedding, thresh=0.35): #compare two embeddings (faces)
     is_match = False
     score = cosine(known_embedding, candidate_embedding)
     
@@ -105,7 +105,6 @@ class Verification:
     return is_match
 
   def accept_login(self, user_hash, b64enc_img): 
-
     accept_login = False
 
     img_arr = self.decode_img(b64enc_img)
