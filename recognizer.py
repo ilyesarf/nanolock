@@ -34,28 +34,13 @@ class Verification:
 
     return img_arr
 
-  def add_user(self, user_hash, b64enc_img):
+  def add_face(self, user_hash, b64enc_img):
     self.user_hash = user_hash
     img_path = f"{self.dataset_dir}{self.user_hash}.jpg"
 
     img_arr = self.decode_img(b64enc_img)
 
     self.extract_face(img_path, img_arr)
-
-    #add user_hash to db
-    if os.path.isfile("users.json") == False:
-      self.users = {"user_hashes": []}
-
-      self.users["user_hashes"].append(self.user_hash)
-
-      json.dump(self.users, open("users.json", "w"))
-
-    else:
-      self.users = json.load(open("users.json", "r"))
-
-      if self.user_hash not in self.users["user_hashes"]:
-        self.users["user_hashes"].append(self.user_hash)
-        json.dump(self.users, open("users.json", "w"))
   
   def extract_face(self, img_path, img_arr):
 
