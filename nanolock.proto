@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package nanolock;
+
+service NanoLock {
+  rpc Verify (FaceRequest) returns (FaceResponse) {}
+}
+
+message FaceRequest {
+  string user_id = 1;
+  bytes image_data = 2;
+}
+
+message FaceResponse {
+  bool verified = 1;
+  string reason = 2;
+}
