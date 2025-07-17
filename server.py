@@ -6,7 +6,7 @@ from recognizer import Verification, NoFaceDetected  # put your class in verifie
 
 verifier = Verification()
 
-class FaceVerifServicer(nanolock_pb2_grpc.FaceVerifServicer):
+class NanoLockServicer(nanolock_pb2_grpc.NanoLockServicer):
     def Verify(self, request, context):
         user_id = request.user_id
         image_data = request.image_data
@@ -52,12 +52,12 @@ class FaceVerifServicer(nanolock_pb2_grpc.FaceVerifServicer):
             )
         
 def serve():
-    print("Starting Face Verification Engine...")
+    print("Starting NanoLock Engine...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    nanolock_pb2_grpc.add_NanoLockServicer_to_server(FaceVerifServicer(), server)
+    nanolock_pb2_grpc.add_NanoLockServicer_to_server(NanoLockServicer(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    print("Face Verification Engine running on port 50051...")
+    print("NanoLock Engine running on port 50051...")
     server.wait_for_termination()
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Use an official Python runtime as a parent image
+# Use TensorFlow 1.15 as a parent image
 FROM python:3.12-slim
 
 # Set working directory
