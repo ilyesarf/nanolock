@@ -4,6 +4,7 @@ package nanolock;
 
 service NanoLock {
   rpc Verify (FaceRequest) returns (FaceResponse) {}
+  rpc AddUser (AddUserRequest) returns (AddUserResponse) {}
 }
 
 message FaceRequest {
@@ -13,5 +14,15 @@ message FaceRequest {
 
 message FaceResponse {
   bool verified = 1;
+  string reason = 2;
+}
+
+message AddUserRequest {
+  string user_id = 1;
+  bytes image_data = 2;
+}
+
+message AddUserResponse {
+  bool success = 1;
   string reason = 2;
 }

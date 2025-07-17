@@ -30,7 +30,29 @@ class FaceVerifServicer(nanolock_pb2_grpc.FaceVerifServicer):
                 reason=f"Error: {str(e)}"
             )
 
+    def AddUser(self, request, context):
+        user_id = request.user_id
+        image_data = request.image_data
+        try:
+            verifier.add_face(user_id, image_data)
+            # You should also add the user to your DB here if needed
+            return nanolock_pb2.AddUserResponse(
+                success=True,
+                reason="User added successfully"
+            )
+        except NoFaceDetected:
+            return nanolock_pb2.AddUserResponse(
+                success=False,
+                reason="No face detected"
+            )
+        except Exception as e:
+            return nanolock_pb2.AddUserResponse(
+                success=False,
+                reason=f"Error: {str(e)}"
+            )
+        
 def serve():
+    print("Starting Face Verification Engine...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     nanolock_pb2_grpc.add_NanoLockServicer_to_server(FaceVerifServicer(), server)
     server.add_insecure_port('[::]:50051')

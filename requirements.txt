@@ -1,0 +1,13 @@
+opencv-python
+opencv-contrib-python
+pillow
+numpy==1.23.5
+mtcnn
+matplotlib
+keras==2.10
+keras_vggface
+keras_applications
+psycopg2-binary
+grpcio
+protobuf
+tensorflow-cpu==2.10

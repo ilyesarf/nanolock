@@ -1,5 +1,5 @@
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 import cv2
 import base64
@@ -7,7 +7,9 @@ import json
 import numpy as np
 from PIL import Image
 from hashlib import md5
+print("Importing before tf")
 from keras_vggface.vggface import VGGFace
+print("Importing after tf")
 from mtcnn.mtcnn import MTCNN
 from keras_vggface.utils import preprocess_input
 from scipy.spatial.distance import cosine
@@ -19,8 +21,8 @@ class Verification:
 
   def __init__(self):
 
+    print("VGGFace model loaded successfully")
     self.model = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3), pooling='avg')
-
     self.dataset_dir = "nanolock/dataset/"
     if os.path.isdir(self.dataset_dir) == False:
       os.makedirs(self.dataset_dir)
